@@ -50,6 +50,7 @@ public class BixolonPrinterPlugin extends Plugin {
         String ip = call.getString("ip");
 
         if (ip == null || ip.isEmpty()) {
+            System.out.println("xxxxxxxxxxxx");
             try {
                 Set<CharSequence> net = BXLNetwork.getNetworkPrinters(this.getActivity(),
                         BXLNetwork.SEARCH_WIFI_ALWAYS);
@@ -67,7 +68,7 @@ public class BixolonPrinterPlugin extends Plugin {
         }
 
         if (ip != null && !ip.isEmpty()) {
-            open = printer.printerOpen(BXLConfigLoader.DEVICE_BUS_WIFI, "SRP-330II", "192.168.30.231", false);
+            open = printer.printerOpen(BXLConfigLoader.DEVICE_BUS_WIFI, "SRP-330II", ip, false);
         }
 
         if (open) {
@@ -102,7 +103,7 @@ public class BixolonPrinterPlugin extends Plugin {
         printer.printText("ORDER\n\n", BixolonPrinter.ALIGNMENT_CENTER,
                 BixolonPrinter.ATTRIBUTE_BOLD | BixolonPrinter.ATTRIBUTE_UNDERLINE, 2);
 
-        String text = String.format("division : %d\npickup_yn : %s\norder_item : %s\nitem_price : %d\ntax : %d\ntotal_price : %d", division, pickup_yn, order_item, item_price, tax, total_price);
+        String text = "division : "+ division + "\npickup_yn : "+ pickup_yn + "\norder_item : " + order_item + "\nitem_price : " + item_price +"\ntax : " + tax +"\ntotal_price : " + total_price + "\n";
         printer.printText(text, BixolonPrinter.ALIGNMENT_LEFT, BixolonPrinter.ATTRIBUTE_BOLD, 1);
 
         text = "Thank you for your purchase!\n" + "Enjoy the show!\n" + "Next year visit\n" + "www.bixolon.com\n"

@@ -24,23 +24,36 @@ var capacitorPlugin = (function (exports, core) {
         }
         connect(options) {
             return __awaiter(this, void 0, void 0, function* () {
-                console.log(options);
-                return {
-                    ip: 'ip',
-                };
+                try {
+                    console.log(options);
+                    return {
+                        ip: 'ip',
+                    };
+                }
+                catch (err) {
+                    throw err;
+                }
             });
         }
         print(options) {
             return __awaiter(this, void 0, void 0, function* () {
-                console.log(options);
-                return { result: 'ok' };
+                try {
+                    console.log(options);
+                    return { result: 'ok' };
+                }
+                catch (err) {
+                    throw err;
+                }
             });
         }
         disconnect() {
             return __awaiter(this, void 0, void 0, function* () {
-                return {
-                    result: 'ok',
-                };
+                try {
+                    return { result: 'ok' };
+                }
+                catch (err) {
+                    throw err;
+                }
             });
         }
     }

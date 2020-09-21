@@ -15,21 +15,32 @@ export class BixolonPrinterPluginWeb
   }
 
   async connect(options: { ip?: string }): Promise<{ ip: string }> {
-    console.log(options);
-    return {
-      ip: 'ip',
-    };
+    try {
+      console.log(options);
+
+      return {
+        ip: 'ip',
+      };
+    } catch (err) {
+      throw err;
+    }
   }
 
   async print(options: PrintItem): Promise<{ result: string }> {
-    console.log(options);
-    return { result: 'ok' };
+    try {
+      console.log(options);
+      return { result: 'ok' };
+    } catch (err) {
+      throw err;
+    }
   }
 
   async disconnect(): Promise<{ result: string }> {
-    return {
-      result: 'ok',
-    };
+    try {
+      return { result: 'ok' };
+    } catch (err) {
+      throw err;
+    }
   }
 }
 
