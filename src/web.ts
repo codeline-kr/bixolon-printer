@@ -1,5 +1,5 @@
 import { WebPlugin } from '@capacitor/core';
-import { BixolonPrinterPluginPlugin } from './definitions';
+import { BixolonPrinterPluginPlugin, PrintItem } from './definitions';
 
 export class BixolonPrinterPluginWeb
   extends WebPlugin
@@ -10,6 +10,9 @@ export class BixolonPrinterPluginWeb
       platforms: ['web'],
     });
   }
+  async is_connected(): Promise<{ connected: boolean }> {
+    return { connected: true };
+  }
 
   async connect(options: { ip?: string }): Promise<{ ip: string }> {
     console.log(options);
@@ -18,9 +21,15 @@ export class BixolonPrinterPluginWeb
     };
   }
 
-  async print(options: { name: string }): Promise<{ result: string }> {
+  async print(options: PrintItem): Promise<{ result: string }> {
     console.log(options);
-    return { result: 'hi' };
+    return { result: 'ok' };
+  }
+
+  async disconnect(): Promise<{ result: string }> {
+    return {
+      result: 'ok',
+    };
   }
 }
 

@@ -17,6 +17,7 @@ import jpos.JposException;
 @NativePlugin
 public class BixolonPrinterPlugin extends Plugin {
     BixolonPrinter printer = null;
+    boolean open = false;
 
     public BixolonPrinterPlugin() {
 
@@ -38,12 +39,20 @@ public class BixolonPrinterPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void is_connected(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("connected", open);
+        call.success(ret);
+    }
+
+    @PluginMethod
     public void connect(PluginCall call) {
         String ip = call.getString("ip");
 
         if (ip == null || ip.isEmpty()) {
             try {
-                Set<CharSequence> net = BXLNetwork.getNetworkPrinters(this.getActivity(), BXLNetwork.SEARCH_WIFI_ALWAYS);
+                Set<CharSequence> net = BXLNetwork.getNetworkPrinters(this.getActivity(),
+                        BXLNetwork.SEARCH_WIFI_ALWAYS);
 
                 if (net.size() > 0) {
                     ip = "" + net.iterator().next();
@@ -56,8 +65,6 @@ public class BixolonPrinterPlugin extends Plugin {
                 e.printStackTrace();
             }
         }
-
-        boolean open = false;
 
         if (ip != null && !ip.isEmpty()) {
             open = printer.printerOpen(BXLConfigLoader.DEVICE_BUS_WIFI, "SRP-330II", "192.168.30.231", false);
@@ -74,40 +81,33 @@ public class BixolonPrinterPlugin extends Plugin {
 
     @PluginMethod
     public void print(PluginCall call) {
-        String name = call.getString("name");
-        System.out.println("name : " + name);
+        if (!open) {
+            call.error("Printer is not connected.");
+            return;
+        }
+
+        Integer division = call.getInt("division");
+        String pickup_yn = call.getString("pickup_yn");
+        String order_item = call.getString("order_item");
+        Double item_price = call.getDouble("item_price");
+        Double tax = call.getDouble("tax");
+        Double total_price = call.getDouble("total_price");
+        String status = call.getString("status");
+        String order_datetime = call.getString("order_datetime");
+
+        System.out.println("division : " + division);
 
         printer.beginTransactionPrint();
 
-        String data = "";
-        data = "Comp: TICKET\n" +
-                "Walton, KT12 3BS\n" +
-                "Tel: 01932 901 155\n" +
-                "123-456-789\n" +
-                "VAT No. 123456789\n\n";
-        printer.printText("TICKET\n\n", BixolonPrinter.ALIGNMENT_CENTER, BixolonPrinter.ATTRIBUTE_BOLD | BixolonPrinter.ATTRIBUTE_UNDERLINE, 2);
-        printer.printText(data, BixolonPrinter.ALIGNMENT_CENTER, BixolonPrinter.ATTRIBUTE_BOLD, 1);
-        printer.printText("Sale:       " + "19-05-2017 16:19:43\n", BixolonPrinter.ALIGNMENT_LEFT, BixolonPrinter.ATTRIBUTE_BOLD, 1);
+        printer.printText("ORDER\n\n", BixolonPrinter.ALIGNMENT_CENTER,
+                BixolonPrinter.ATTRIBUTE_BOLD | BixolonPrinter.ATTRIBUTE_UNDERLINE, 2);
 
-        data = "Gate:       " + "Xcover kiosk\n" +
-                "Operator:   " + "Rob\n" +
-                "Order Code: " + "263036991\n";
-        printer.printText(data, BixolonPrinter.ALIGNMENT_LEFT, 0, 1);
-        printer.printText("Qty Price  Item     Total\n", BixolonPrinter.ALIGNMENT_LEFT, BixolonPrinter.ATTRIBUTE_UNDERLINE, 1);
-        printer.printText(" 1  $8.00  PARKING  $8.00\n", BixolonPrinter.ALIGNMENT_LEFT, 0, 1);
+        String text = String.format("division : %d\npickup_yn : %s\norder_item : %s\nitem_price : %d\ntax : %d\ntotal_price : %d", division, pickup_yn, order_item, item_price, tax, total_price);
+        printer.printText(text, BixolonPrinter.ALIGNMENT_LEFT, BixolonPrinter.ATTRIBUTE_BOLD, 1);
 
-        data = "Total (inc VAT):  " + "  $8.00\n" +
-                "VAT amount (20%): " + "  $1.33\n" +
-                "CARD payment:     " + "  $8.00\n" +
-                "Change due:       " + "  $0.00\n\n";
-        printer.printText(data, BixolonPrinter.ALIGNMENT_RIGHT, BixolonPrinter.ATTRIBUTE_NORMAL, 1);
-
-        data = "Thank you for your purchase!\n" +
-                "Enjoy the show!\n" +
-                "Next year visit\n" +
-                "www.bixolon.com\n" +
-                "to buy discounted tickets.\n\n\n\n";
-        printer.printText(data, BixolonPrinter.ALIGNMENT_CENTER, BixolonPrinter.ATTRIBUTE_BOLD, 1);
+        text = "Thank you for your purchase!\n" + "Enjoy the show!\n" + "Next year visit\n" + "www.bixolon.com\n"
+                + "to buy discounted tickets.\n\n\n\n";
+        printer.printText(text, BixolonPrinter.ALIGNMENT_CENTER, BixolonPrinter.ATTRIBUTE_BOLD, 1);
 
         printer.cutPaper();
 
@@ -115,6 +115,16 @@ public class BixolonPrinterPlugin extends Plugin {
 
         JSObject ret = new JSObject();
         ret.put("result", "success");
+        call.success(ret);
+    }
+
+    @PluginMethod
+    public void disconnect(PluginCall call) {
+        printer.printerClose();
+        open = false;
+
+        JSObject ret = new JSObject();
+        ret.put("result", "ok");
         call.success(ret);
     }
 }

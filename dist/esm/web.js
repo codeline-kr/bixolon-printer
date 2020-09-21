@@ -15,6 +15,11 @@ export class BixolonPrinterPluginWeb extends WebPlugin {
             platforms: ['web'],
         });
     }
+    is_connected() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return { connected: true };
+        });
+    }
     connect(options) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log(options);
@@ -26,7 +31,14 @@ export class BixolonPrinterPluginWeb extends WebPlugin {
     print(options) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log(options);
-            return { result: 'hi' };
+            return { result: 'ok' };
+        });
+    }
+    disconnect() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return {
+                result: 'ok',
+            };
         });
     }
 }
