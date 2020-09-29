@@ -1,6 +1,11 @@
 var capacitorPlugin = (function (exports, core) {
     'use strict';
 
+    (function (PrintMode) {
+        PrintMode["RECEIPT"] = "RECEIPT";
+        PrintMode["KITCHEN"] = "KITCHEN";
+    })(exports.PrintMode || (exports.PrintMode = {}));
+
     var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
         function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
         return new (P || (P = Promise))(function (resolve, reject) {
@@ -17,9 +22,14 @@ var capacitorPlugin = (function (exports, core) {
                 platforms: ['web'],
             });
         }
-        is_connected() {
+        scan_printer() {
             return __awaiter(this, void 0, void 0, function* () {
-                return { connected: true };
+                try {
+                    return { results: [] };
+                }
+                catch (err) {
+                    throw err;
+                }
             });
         }
         connect(options) {
@@ -27,7 +37,7 @@ var capacitorPlugin = (function (exports, core) {
                 try {
                     console.log(options);
                     return {
-                        ip: 'ip',
+                        connect: false,
                     };
                 }
                 catch (err) {
@@ -39,17 +49,7 @@ var capacitorPlugin = (function (exports, core) {
             return __awaiter(this, void 0, void 0, function* () {
                 try {
                     console.log(options);
-                    return { result: 'ok' };
-                }
-                catch (err) {
-                    throw err;
-                }
-            });
-        }
-        disconnect() {
-            return __awaiter(this, void 0, void 0, function* () {
-                try {
-                    return { result: 'ok' };
+                    return { result: true };
                 }
                 catch (err) {
                     throw err;

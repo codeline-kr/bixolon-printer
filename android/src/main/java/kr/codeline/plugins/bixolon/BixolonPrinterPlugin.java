@@ -1,6 +1,9 @@
 package kr.codeline.plugins.bixolon;
 
+import android.text.TextUtils;
+
 import com.bxl.config.editor.BXLConfigLoader;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.NativePlugin;
 import com.getcapacitor.Plugin;
@@ -9,18 +12,19 @@ import com.getcapacitor.PluginMethod;
 
 import com.bxl.config.util.BXLNetwork;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jpos.JposException;
 
 @NativePlugin
 public class BixolonPrinterPlugin extends Plugin {
     BixolonPrinter printer = null;
-    boolean open = false;
 
     public BixolonPrinterPlugin() {
-
         System.out.println("BixolonPrinterPlugin 생성");
     }
 
@@ -31,101 +35,109 @@ public class BixolonPrinterPlugin extends Plugin {
         printer = new BixolonPrinter(this.getContext());
     }
 
-    @Override
-    protected void handleOnDestroy() {
-        super.handleOnDestroy();
-
-        printer.printerClose();
-    }
-
     @PluginMethod
-    public void is_connected(PluginCall call) {
+    public void scan_printer(PluginCall call) {
         JSObject ret = new JSObject();
-        ret.put("connected", open);
-        call.success(ret);
+
+        //saveCall(call);
+        //pluginRequestPermission();
+
+        try {
+            Set<CharSequence> net = BXLNetwork.getNetworkPrinters(this.getActivity(),
+                    BXLNetwork.SEARCH_WIFI_ALWAYS);
+
+            if (net.size() > 0) {
+                JSArray ip_list = new JSArray(net);
+                ret.put("results", ip_list);
+
+                call.success(ret);
+            } else {
+                call.error("Could not find printer in your network.");
+            }
+
+            System.out.println("ret : " + ret);
+        } catch (NumberFormatException | JposException e) {
+            e.printStackTrace();
+        }
     }
 
     @PluginMethod
     public void connect(PluginCall call) {
         String ip = call.getString("ip");
-
-        if (ip == null || ip.isEmpty()) {
-            System.out.println("xxxxxxxxxxxx");
-            try {
-                Set<CharSequence> net = BXLNetwork.getNetworkPrinters(this.getActivity(),
-                        BXLNetwork.SEARCH_WIFI_ALWAYS);
-
-                if (net.size() > 0) {
-                    ip = "" + net.iterator().next();
-                } else {
-                    call.error("Could not find printer in your network.");
-                }
-
-                System.out.println("net : " + net);
-            } catch (NumberFormatException | JposException e) {
-                e.printStackTrace();
-            }
-        }
+        String mode = call.getString("mode");
 
         if (ip != null && !ip.isEmpty()) {
-            open = printer.printerOpen(BXLConfigLoader.DEVICE_BUS_WIFI, "SRP-330II", ip, false);
-        }
+            boolean connect = printer.printerOpen(BXLConfigLoader.DEVICE_BUS_WIFI, mode, ip, false);
 
-        if (open) {
-            JSObject ret = new JSObject();
-            ret.put("ip", ip);
-            call.success(ret);
-        } else {
-            call.error("Could not connect to printer.");
+            System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
+            if (connect) {
+                JSObject ret = new JSObject();
+                ret.put("connect", true);
+                call.success(ret);
+            } else {
+                call.error("Could not connect to printer.");
+            }
+        }else{
+            call.error("Printer IP required.");
         }
     }
 
     @PluginMethod
     public void print(PluginCall call) {
-        if (!open) {
-            call.error("Printer is not connected.");
-            return;
-        }
-
+        String ip = call.getString("ip");
+        String mode = call.getString("mode");
         Integer division = call.getInt("division");
         String pickup_yn = call.getString("pickup_yn");
         String order_item = call.getString("order_item");
         Double item_price = call.getDouble("item_price");
         Double tax = call.getDouble("tax");
         Double total_price = call.getDouble("total_price");
+        Double request = call.getDouble("request");
         String status = call.getString("status");
         String order_datetime = call.getString("order_datetime");
 
         System.out.println("division : " + division);
 
-        printer.beginTransactionPrint();
+        boolean open = printer.printerOpen(BXLConfigLoader.DEVICE_BUS_WIFI, mode, ip, false);
 
-        printer.printText("ORDER\n\n", BixolonPrinter.ALIGNMENT_CENTER,
-                BixolonPrinter.ATTRIBUTE_BOLD | BixolonPrinter.ATTRIBUTE_UNDERLINE, 2);
+        if (open) {
+            printer.beginTransactionPrint();
 
-        String text = "division : "+ division + "\npickup_yn : "+ pickup_yn + "\norder_item : " + order_item + "\nitem_price : " + item_price +"\ntax : " + tax +"\ntotal_price : " + total_price + "\n";
-        printer.printText(text, BixolonPrinter.ALIGNMENT_LEFT, BixolonPrinter.ATTRIBUTE_BOLD, 1);
+            // 영수증 프린터
+            if( "RECEIPT".equals(mode) ){
+                printer.printText("ORDER\n\n", BixolonPrinter.ALIGNMENT_CENTER,
+                        BixolonPrinter.ATTRIBUTE_BOLD | BixolonPrinter.ATTRIBUTE_UNDERLINE, 2);
 
-        text = "Thank you for your purchase!\n" + "Enjoy the show!\n" + "Next year visit\n" + "www.bixolon.com\n"
-                + "to buy discounted tickets.\n\n\n\n";
-        printer.printText(text, BixolonPrinter.ALIGNMENT_CENTER, BixolonPrinter.ATTRIBUTE_BOLD, 1);
+                String text = "영수증 프린터\ndivision : " + division + "\npickup_yn : " + pickup_yn + "\norder_item : " + order_item + "\nitem_price : " + item_price + "\ntax : " + tax + "\ntotal_price : " + total_price + "\n";
+                printer.printText(text, BixolonPrinter.ALIGNMENT_LEFT, BixolonPrinter.ATTRIBUTE_BOLD, 1);
 
-        printer.cutPaper();
+                text = "Thank you for your purchase!\n" + "Enjoy the show!\n" + "Next year visit\n" + "www.bixolon.com\n"
+                        + "to buy discounted tickets.\n\n\n\n";
+                printer.printText(text, BixolonPrinter.ALIGNMENT_CENTER, BixolonPrinter.ATTRIBUTE_BOLD, 1);
+            }
+            // 주방 프린터
+            else if( "KITCHEN".equals(mode)){
+                printer.printText("ORDER\n\n", BixolonPrinter.ALIGNMENT_CENTER,
+                        BixolonPrinter.ATTRIBUTE_BOLD | BixolonPrinter.ATTRIBUTE_UNDERLINE, 2);
 
-        printer.endTransactionPrint();
+                String text = "주방 프린터\ndivision : " + division + "\npickup_yn : " + pickup_yn + "\norder_item : " + order_item + "\nitem_price : " + item_price + "\ntax : " + tax + "\ntotal_price : " + total_price + "\n";
+                printer.printText(text, BixolonPrinter.ALIGNMENT_LEFT, BixolonPrinter.ATTRIBUTE_BOLD, 1);
 
-        JSObject ret = new JSObject();
-        ret.put("result", "success");
-        call.success(ret);
-    }
+                text = "Thank you for your purchase!\n" + "Enjoy the show!\n" + "Next year visit\n" + "www.bixolon.com\n"
+                        + "to buy discounted tickets.\n\n\n\n";
+                printer.printText(text, BixolonPrinter.ALIGNMENT_CENTER, BixolonPrinter.ATTRIBUTE_BOLD, 1);
+            }
 
-    @PluginMethod
-    public void disconnect(PluginCall call) {
-        printer.printerClose();
-        open = false;
+            printer.cutPaper();
+            printer.endTransactionPrint();
+            printer.printerClose();
 
-        JSObject ret = new JSObject();
-        ret.put("result", "ok");
-        call.success(ret);
+            JSObject ret = new JSObject();
+            ret.put("result", true);
+            call.success(ret);
+        } else {
+            call.error("Could not connect to printer.");
+        }
     }
 }

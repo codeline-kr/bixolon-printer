@@ -15,9 +15,14 @@ export class BixolonPrinterPluginWeb extends WebPlugin {
             platforms: ['web'],
         });
     }
-    is_connected() {
+    scan_printer() {
         return __awaiter(this, void 0, void 0, function* () {
-            return { connected: true };
+            try {
+                return { results: [] };
+            }
+            catch (err) {
+                throw err;
+            }
         });
     }
     connect(options) {
@@ -25,7 +30,7 @@ export class BixolonPrinterPluginWeb extends WebPlugin {
             try {
                 console.log(options);
                 return {
-                    ip: 'ip',
+                    connect: false,
                 };
             }
             catch (err) {
@@ -37,17 +42,7 @@ export class BixolonPrinterPluginWeb extends WebPlugin {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 console.log(options);
-                return { result: 'ok' };
-            }
-            catch (err) {
-                throw err;
-            }
-        });
-    }
-    disconnect() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                return { result: 'ok' };
+                return { result: true };
             }
             catch (err) {
                 throw err;

@@ -4,20 +4,30 @@ declare module '@capacitor/core' {
   }
 }
 
+export enum PrintMode {
+  RECEIPT = 'RECEIPT',
+  KITCHEN = 'KITCHEN',
+}
+
 export interface PrintItem {
+  printer_ip: string;
+  mode: PrintMode;
   division: number;
   pickup_yn?: string;
   order_item?: string;
   item_price?: number;
   tax?: number;
   total_price?: number;
+  request?: string;
   status?: string;
   order_datetime?: string;
 }
 
 export interface BixolonPrinterPluginPlugin {
-  is_connected(): Promise<{ connected: boolean }>;
-  connect(options: { ip?: string }): Promise<{ ip: string }>;
-  print(options: PrintItem): Promise<{ result: string }>;
-  disconnect(): Promise<{ result: string }>;
+  scan_printer(): Promise<{ results: string[] }>;
+  connect(options: {
+    ip?: string;
+    mode: PrintMode;
+  }): Promise<{ connect: boolean }>;
+  print(options: PrintItem): Promise<{ result: boolean }>;
 }

@@ -1,20 +1,18 @@
 import { WebPlugin } from '@capacitor/core';
-import { BixolonPrinterPluginPlugin, PrintItem } from './definitions';
+import { BixolonPrinterPluginPlugin, PrintItem, PrintMode } from './definitions';
 export declare class BixolonPrinterPluginWeb extends WebPlugin implements BixolonPrinterPluginPlugin {
     constructor();
-    is_connected(): Promise<{
-        connected: boolean;
+    scan_printer(): Promise<{
+        results: string[];
     }>;
     connect(options: {
         ip?: string;
+        mode: PrintMode;
     }): Promise<{
-        ip: string;
+        connect: boolean;
     }>;
     print(options: PrintItem): Promise<{
-        result: string;
-    }>;
-    disconnect(): Promise<{
-        result: string;
+        result: boolean;
     }>;
 }
 declare const BixolonPrinterPlugin: BixolonPrinterPluginWeb;
