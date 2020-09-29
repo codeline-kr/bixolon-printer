@@ -52,15 +52,24 @@ public class BixolonPrinter implements ErrorListener, OutputCompleteListener, St
         }
     }
 
-    public boolean printerOpen(int portType, String logicalName, String address, boolean isAsyncMode) {
+    public boolean open(int portType, String logicalName, String address, boolean isAsyncMode) {
         if (setTargetDevice(portType, logicalName, address)) {
             try {
-                posPrinter.open(BXLConfigLoader.PRODUCT_NAME_SRP_330II);
+                posPrinter.open(logicalName);
                 posPrinter.claim(10000 * 3);
                 posPrinter.setDeviceEnabled(true);
                 posPrinter.setAsyncMode(isAsyncMode);
             } catch (JposException e) {
                 if( e.getErrorCode()==106 ){
+                    try {
+                        posPrinter.claim(10000 * 3);
+                        posPrinter.setDeviceEnabled(true);
+                        posPrinter.setAsyncMode(isAsyncMode);
+                    }catch (JposException e1){
+                        System.out.println("JposException e1");
+                        e1.printStackTrace();
+                    }
+
                     return true;
                 }
 
@@ -80,7 +89,7 @@ public class BixolonPrinter implements ErrorListener, OutputCompleteListener, St
         return true;
     }
 
-    public boolean printerClose() {
+    public boolean close() {
         try {
             if (posPrinter.getClaimed()) {
                 posPrinter.setDeviceEnabled(false);
@@ -118,6 +127,8 @@ public class BixolonPrinter implements ErrorListener, OutputCompleteListener, St
         boolean ret = true;
 
         try {
+            System.out.println("printText posPrinter.getDeviceEnabled() : " + posPrinter.getDeviceEnabled());
+
             if (!posPrinter.getDeviceEnabled()) {
                 return false;
             }
@@ -296,7 +307,7 @@ public class BixolonPrinter implements ErrorListener, OutputCompleteListener, St
                 return "StatusUpdate : Power on";
 
             case JposConst.JPOS_SUE_POWER_OFF_OFFLINE:
-                printerClose();
+                close();
                 return "StatusUpdate : Power off";
 
             case POSPrinterConst.PTR_SUE_COVER_OPEN:
